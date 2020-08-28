@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/admin', adminRoutes)
 app.use(shopRoutes)
-
+app.use(TERobau)
 app.use(errorController.error)
 
 app.listen(8000)
