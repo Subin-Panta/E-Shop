@@ -11,21 +11,28 @@ exports.postAddProduct = async (req, res, next) => {
   const imageUrl = req.body.imageUrl
   const price = req.body.price
   const description = req.body.description
-  const product = new Product(null, title, imageUrl, description, price)
+
   try {
-    await product.save()
+    const response = await Product.create({
+      title,
+      price,
+      imageUrl,
+      description
+    })
+    console.log('created product')
     res.redirect('/')
   } catch (error) {
     console.log(error)
   }
 }
-exports.getEditProduct = (req, res) => {
+exports.getEditProduct = async (req, res) => {
   const editMode = req.query.edit
   if (!editMode) {
     return res.redirect('/')
   }
   const id = req.params.id
-  Product.findById(id, product => {
+  try {
+    const product = await Product.findByPk(id)
     if (!product) {
       return res.redirect('/')
     }
@@ -35,7 +42,9 @@ exports.getEditProduct = (req, res) => {
       editing: editMode,
       product
     })
-  })
+  } catch (error) {
+    console.log(error)
+  }
 }
 exports.postEditProduct = (req, res, next) => {
   const id = req.body.id
@@ -53,14 +62,17 @@ exports.postEditProduct = (req, res, next) => {
   updatedProduct.save()
   res.redirect('/admin/products')
 }
-exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
+exports.getProducts = async (req, res, next) => {
+  try {
+    const products = await Product.findAll()
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
       path: '/admin/products'
     })
-  })
+  } catch (error) {
+    console.log(error)
+  }
 }
 exports.deleteProduct = (req, res, next) => {
   Product.delete(req.params.id)
