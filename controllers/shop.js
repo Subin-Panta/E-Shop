@@ -45,38 +45,54 @@ exports.getIndex = async (req, res) => {
     console.log(error)
   }
 }
-exports.getCart = (req, res) => {
-  Cart.getCart(cart => {
-    Product.fetchAll(products => {
-      const cartProducts = []
-      for (product of products) {
-        if (cart !== null) {
-          const cartProductData = cart.products.find(
-            item => item.id === product.id
-          )
-          if (cartProductData) {
-            const qty = cartProductData.qty
-            cartProducts.push({ product, qty: qty })
-          }
-        } else {
-          break
-        }
-      }
-      res.render('shop/cart', {
-        pageTitle: 'Cart',
-        path: '/cart',
-        cartProducts
-      })
+exports.getCart = async (req, res) => {
+  try {
+    const cart = await req.user.getCart()
+    const cartProducts = await cart.getProducts()
+    console.log(cartProducts)
+    res.render('shop/cart', {
+      pageTitle: 'Cart',
+      path: '/cart',
+      cartProducts
     })
-  })
+  } catch (error) {
+    console.log(error)
+  }
 }
 
-exports.postCart = (req, res, next) => {
+exports.postCart = async (req, res, next) => {
   const id = req.body.id
-  Product.findById(id, product => {
-    Cart.addProduct(id, product.price)
-  })
-  res.redirect('/cart')
+  try {
+    const cart = await req.user.getCart()
+    const products = await cart.getProducts({
+      where: {
+        id: id
+      }
+    })
+    let product
+    if (products.length > 0) {
+      product = products[0]
+    }
+    let newQuantity = 0
+    if (product) {
+      const oldQuantity = product.cartItem.quantity
+      newQuantity = oldQuantity + 1
+      await cart.addProduct(product, {
+        through: { quantity: newQuantity }
+      })
+    } else {
+      const p = await Product.findByPk(id)
+      await cart.addProduct(p, {
+        through: {
+          quantity: 1
+        }
+      })
+    }
+
+    res.redirect('/cart')
+  } catch (error) {
+    console.log(error)
+  }
 }
 exports.getCheckout = (req, res, next) => {
   res.render('shop/checkout', {
@@ -90,10 +106,15 @@ exports.getOrders = (req, res, next) => {
     path: '/orders'
   })
 }
-exports.postCartDeleteProduct = (req, res, next) => {
+exports.postCartDeleteProduct = async (req, res, next) => {
   const id = req.params.id
-  Product.findById(id, product => {
-    Cart.deleteById(id, product.price)
+  try {
+    const cart = await req.user.getCart()
+    const products = await cart.getProducts({ where: { id: id } })
+    const product = products[0]
+    await product.cartItem.destroy()
     res.redirect('/cart')
-  })
+  } catch (error) {
+    console.log(error)
+  }
 }
