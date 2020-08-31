@@ -1,5 +1,4 @@
 const Product = require('../models/product')
-const Cart = require('../models/cart')
 
 exports.getProducts = async (req, res, next) => {
   try {
@@ -94,17 +93,18 @@ exports.postCart = async (req, res, next) => {
     console.log(error)
   }
 }
-exports.getCheckout = (req, res, next) => {
-  res.render('shop/checkout', {
-    pageTitle: 'Checkout',
-    path: '/checkout'
-  })
-}
-exports.getOrders = (req, res, next) => {
-  res.render('shop/orders', {
-    pageTitle: 'My Orders',
-    path: '/orders'
-  })
+
+exports.getOrders = async (req, res, next) => {
+  try {
+    const orders = await req.user.getOrders({ include: ['products'] })
+    res.render('shop/orders', {
+      pageTitle: 'My Orders',
+      path: '/orders',
+      orders
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
 exports.postCartDeleteProduct = async (req, res, next) => {
   const id = req.params.id
@@ -114,6 +114,25 @@ exports.postCartDeleteProduct = async (req, res, next) => {
     const product = products[0]
     await product.cartItem.destroy()
     res.redirect('/cart')
+  } catch (error) {
+    console.log(error)
+  }
+}
+exports.postOrder = async (req, res, next) => {
+  try {
+    const cart = await req.user.getCart()
+    const products = await cart.getProducts()
+    const order = await req.user.createOrder()
+    await order.addProducts(
+      products.map(product => {
+        product.orderItem = {
+          quantity: product.cartItem.quantity
+        }
+        return product
+      })
+    )
+    await cart.setProducts(null)
+    res.redirect('/orders')
   } catch (error) {
     console.log(error)
   }

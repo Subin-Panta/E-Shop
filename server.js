@@ -15,6 +15,8 @@ const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const Cart = require('./models/cart')
 const CartItem = require('./models/cart-item')
+const Order = require('./models/order')
+const OrderItem = require('./models/order-item')
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(async (req, res, next) => {
@@ -35,7 +37,9 @@ User.hasOne(Cart)
 Cart.belongsTo(User) //optional one directional relationship is enough
 Cart.belongsToMany(Product, { through: CartItem }) //optional one direction is enoguh
 Product.belongsToMany(Cart, { through: CartItem })
-
+Order.belongsTo(User)
+User.hasMany(Order)
+Order.belongsToMany(Product, { through: OrderItem })
 const run = async () => {
   try {
     await sequelize
