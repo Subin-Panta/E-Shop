@@ -1,32 +1,29 @@
 const Product = require('../models/product')
-const Cart = require('../models/cart')
+const Cart = require('../models/user')
 
-exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
-    res.render('shop/product-list', {
-      prods: products,
-      pageTitle: 'Products',
-      path: '/products'
-    })
+exports.getProducts = async (req, res, next) => {
+  const products = await Product.find()
+  res.render('shop/product-list', {
+    prods: products,
+    pageTitle: 'Products',
+    path: '/products'
   })
 }
-exports.getProduct = (req, res, next) => {
+exports.getProduct = async (req, res, next) => {
   const id = req.params.id
-  Product.findById(id, product => {
-    res.render('shop/product-detail', {
-      product,
-      pageTitle: product.title,
-      path: '/products'
-    })
+  const product = await Product.findById(id)
+  res.render('shop/product-detail', {
+    product,
+    pageTitle: product.title,
+    path: '/products'
   })
 }
-exports.getIndex = (req, res) => {
-  Product.fetchAll(products => {
-    res.render('shop/index', {
-      prods: products,
-      pageTitle: 'Shop',
-      path: '/'
-    })
+exports.getIndex = async (req, res) => {
+  const products = await Product.find()
+  res.render('shop/index', {
+    prods: products,
+    pageTitle: 'Shop',
+    path: '/'
   })
 }
 exports.getCart = (req, res) => {
