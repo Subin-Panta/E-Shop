@@ -1,63 +1,69 @@
-const fs = require('fs')
-const path = require('path')
-const Rootdir = require('../util/path')
-const Cart = require('./cart')
-const p = path.join(Rootdir, 'data', 'products.json')
-const { v4: uuidv4 } = require('uuid')
-const getProductsFromFile = cb => {
-  fs.readFile(p, (err, data) => {
-    if (err) {
-      return cb([])
-    }
-    {
-      cb(JSON.parse(data))
-    }
-  })
-}
-module.exports = class Product {
-  constructor(id, title, imageUrl, description, price) {
-    this.id = id
+const mongodb = require('mongodb')
+const getDb = require('../util/database').getDb
+class Product {
+  constructor(title, price, description, imageUrl, id, userId) {
     this.title = title
-    this.imageUrl = imageUrl
-    this.description = description
     this.price = price
+    this.description = description
+    this.imageUrl = imageUrl
+    this._id = id ? new mongodb.ObjectID(id) : null
+    this.userId = userId
   }
-  save() {
-    getProductsFromFile(products => {
-      if (this.id) {
-        const existingProductIndex = products.findIndex(p => p.id === this.id)
-        const UpdatedProducts = [...products]
-        UpdatedProducts[existingProductIndex] = this
-        fs.writeFile(p, JSON.stringify(UpdatedProducts), err => {
-          console.log(err)
-        })
-      } else {
-        this.id = uuidv4()
-        products.push(this)
-        fs.writeFile(p, JSON.stringify(products), err => {
-          console.log(err)
-        })
+  async save() {
+    const db = getDb()
+    if (this._id) {
+      try {
+        await db.collection('products').updateOne(
+          {
+            _id: this._id
+          },
+          {
+            $set: this
+          }
+        )
+      } catch (error) {
+        console.log(error)
       }
-    })
+    } else {
+      try {
+        await db.collection('products').insertOne(this)
+      } catch (error) {
+        console.log(error)
+      }
+    }
   }
-  static fetchAll(cb) {
-    getProductsFromFile(cb)
+  static async fetchAll() {
+    const db = getDb()
+    try {
+      const products = await db.collection('products').find().toArray()
+      return products
+    } catch (error) {
+      console.log(error)
+    }
   }
-  static findById(id, cb) {
-    getProductsFromFile(products => {
-      const product = products.find(prod => prod.id === id)
-      cb(product)
-    })
+  static async findById(id) {
+    const db = getDb()
+    try {
+      const product = await db
+        .collection('products')
+        .find({ _id: new mongodb.ObjectId(id) })
+        .next()
+      return product
+    } catch (error) {
+      console.log(error)
+    }
   }
-  static delete(id) {
-    getProductsFromFile(products => {
-      const product = products.find(item => item.id === id)
-      const newProducts = products.filter(item => item.id !== id)
-      fs.writeFile(p, JSON.stringify(newProducts), err => {
-        if (!err) {
-          Cart.deleteById(id, product.price)
-        }
-      })
-    })
+  static async deleteById(id) {
+    const db = getDb()
+    try {
+      await db
+        .collection('products')
+        .deleteOne({ _id: new mongodb.ObjectID(id) })
+      console.log('Deleted')
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
+
+module.exports = Product
