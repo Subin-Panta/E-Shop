@@ -60,6 +60,11 @@ exports.postEditProduct = async (req, res, next) => {
 }
 exports.deleteProduct = async (req, res, next) => {
   await Product.deleteById(req.params.id)
+  if (req.user.cart && req.user.cart.items && req.user.cart.items.length > 0) {
+    const id = req.user.cart.items.find(i => (i._id = req.params.id))
+
+    req.user.deleteItemFromCart(id._id)
+  }
   res.redirect('/admin/products')
 }
 exports.getProducts = async (req, res, next) => {

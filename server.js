@@ -14,7 +14,7 @@ const connectDb = require('./util/database').connectDb
 
 const run = async () => {
   await connectDb()
-  let id = '5f533efb474f731bf0fbefe9'
+  let id = '5f55c13f9094135784af8f31'
   app.use(async (req, res, next) => {
     try {
       const user = await User.findById(id)

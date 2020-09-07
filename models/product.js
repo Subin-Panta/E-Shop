@@ -1,4 +1,5 @@
 const mongodb = require('mongodb')
+const User = require('./user')
 const getDb = require('../util/database').getDb
 class Product {
   constructor(title, price, description, imageUrl, id, userId) {
@@ -59,7 +60,6 @@ class Product {
       await db
         .collection('products')
         .deleteOne({ _id: new mongodb.ObjectID(id) })
-      console.log('Deleted')
     } catch (error) {
       console.log(error)
     }
