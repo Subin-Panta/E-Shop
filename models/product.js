@@ -10,7 +10,12 @@ const productSchema = new Schema({
     required: true
   },
   description: String,
-  imageUrl: String
+  imageUrl: String,
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: 'true'
+  }
 })
 
 module.exports = mongoose.model('Product', productSchema)

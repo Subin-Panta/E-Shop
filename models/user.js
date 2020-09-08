@@ -1,63 +1,49 @@
-// const fs = require('fs')
-// const path = require('path')
-// const Rootdir = require('../util/path')
-
-// const p = path.join(Rootdir, 'data', 'cart.json')
-// module.exports = class Cart {
-//   static addProduct(id, productPrice) {
-//     //fetch Previous CARt
-//     fs.readFile(p, (error, data) => {
-//       let cart = { products: [], totalPrice: 0 }
-//       if (!error) {
-//         cart = JSON.parse(data)
-//       }
-
-//       //find Existing product
-//       const existingProductIndex = cart.products.findIndex(p => p.id === id)
-//       const existingProduct = cart.products[existingProductIndex]
-//       let updatedProduct
-//       //add new Product / increase qauntity
-//       if (existingProduct) {
-//         updatedProduct = { ...existingProduct, qty: existingProduct.qty + 1 }
-//         cart.products[existingProductIndex] = updatedProduct
-//       } else {
-//         updatedProduct = { id: id, qty: 1 }
-//         cart.products.push(updatedProduct)
-//       }
-
-//       cart.totalPrice = cart.totalPrice + +productPrice
-//       fs.writeFile(p, JSON.stringify(cart), err => {
-//         console.log(err)
-//       })
-//     })
-//   }
-//   static deleteById(id, price) {
-//     fs.readFile(p, (error, data) => {
-//       if (error) {
-//         return
-//       }
-//       const cart = JSON.parse(data)
-//       const updatedCart = { ...cart }
-//       const product = updatedCart.products.find(item => item.id === id)
-//       if (!product) {
-//         return
-//       }
-//       updatedCart.products = updatedCart.products.filter(item => item.id !== id)
-
-//       updatedCart.totalPrice = updatedCart.totalPrice - price * product.qty
-//       fs.writeFile(p, JSON.stringify(updatedCart), err => {
-//         console.log(err)
-//       })
-//     })
-//   }
-//   static getCart(cb) {
-//     fs.readFile(p, (err, data) => {
-//       if (err) {
-//         cb(null)
-//       } else {
-//         const cart = JSON.parse(data)
-//         cb(cart)
-//       }
-//     })
-//   }
-// }
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
+const userSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  cart: {
+    items: [
+      {
+        productId: {
+          type: Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true
+        },
+        quantity: { type: Number, required: true }
+      }
+    ]
+  }
+})
+userSchema.methods.addToCart = async function (id) {
+  let updatedCartItems = []
+  updatedCartItems = [...this.cart.items]
+  const cartProductIndex = this.cart.items.findIndex(cp => {
+    return cp.productId.toString() === id
+  })
+  if (cartProductIndex >= 0) {
+    let newQuantity = this.cart.items[cartProductIndex].quantity + 1
+    updatedCartItems[cartProductIndex].quantity = newQuantity
+  } else {
+    updatedCartItems.push({ productId: id, quantity: 1 })
+  }
+  this.cart.items = updatedCartItems
+  try {
+    await this.save()
+  } catch (error) {
+    console.log(error)
+  }
+}
+userSchema.methods.removeFromCart = async function (id) {
+  const updatedCartItems = this.cart.items.filter(
+    item => item.productId  .toString() !== id
+  )
+  this.cart.items = updatedCartItems
+  try {
+    await this.save()
+  } catch (error) {
+    console.log(error)
+  }
+}
+module.exports = mongoose.model('User', userSchema)
