@@ -1,9 +1,11 @@
 const Product = require('../models/product')
+const shopController = require('./shop')
 exports.getAddProduct = (req, res) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
-    editing: false
+    editing: false,
+    isAuthenticated: req.isLoggedIn
   })
 }
 exports.postAddProduct = async (req, res, next) => {
@@ -40,7 +42,8 @@ exports.getEditProduct = async (req, res) => {
     pageTitle: 'Add Product',
     path: '/admin/products',
     editing: editMode,
-    product
+    product,
+    isAuthenticated: req.isLoggedIn
   })
 }
 exports.postEditProduct = async (req, res, next) => {
@@ -56,20 +59,24 @@ exports.postEditProduct = async (req, res, next) => {
   product.price = updatedPrice
   await product.save()
 
-  res.redirect('/admin/products')
+  res.redirect('/admin/products', {
+    isAuthenticated: req.isLoggedIn
+  })
 }
 exports.getProducts = async (req, res, next) => {
   const products = await Product.find()
-    // const products = await Product.find().populate('userId')
-    // console.log(products)
+  // const products = await Product.find().populate('userId')
+  // console.log(products)
   res.render('admin/products', {
     prods: products,
     pageTitle: 'Admin Products',
-    path: '/admin/products'
+    path: '/admin/products',
+    isAuthenticated: req.isLoggedIn
   })
 }
 exports.deleteProduct = async (req, res, next) => {
   const id = req.params.id
+  await req.user.removeFromCart(id)
   await Product.findByIdAndDelete(id)
-  res.redirect('/admin/products')
+  res.redirect('/admin/products', { isAuthenticated: req.isLoggedIn })
 }
