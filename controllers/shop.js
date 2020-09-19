@@ -6,7 +6,7 @@ exports.getProducts = async (req, res, next) => {
     prods: products,
     pageTitle: 'Products',
     path: '/products',
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.getProduct = async (req, res, next) => {
@@ -16,7 +16,7 @@ exports.getProduct = async (req, res, next) => {
     product,
     pageTitle: product.title,
     path: '/products',
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.getIndex = async (req, res) => {
@@ -24,8 +24,7 @@ exports.getIndex = async (req, res) => {
   res.render('shop/index', {
     prods: products,
     pageTitle: 'Shop',
-    path: '/',
-    isAuthenticated: req.isLoggedIn
+    path: '/'
   })
 }
 exports.getCart = async (req, res) => {
@@ -37,7 +36,7 @@ exports.getCart = async (req, res) => {
     path: '/cart',
     cartProducts,
     price,
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.postCart = async (req, res, next) => {
@@ -49,7 +48,7 @@ exports.getCheckout = (req, res, next) => {
   res.render('shop/checkout', {
     pageTitle: 'Checkout',
     path: '/checkout',
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.getOrders = async (req, res, next) => {
@@ -60,7 +59,7 @@ exports.getOrders = async (req, res, next) => {
     pageTitle: 'My Orders',
     path: '/orders',
     orders,
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.postOrder = async (req, res, next) => {

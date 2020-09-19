@@ -5,7 +5,7 @@ exports.getAddProduct = (req, res) => {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editing: false,
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.postAddProduct = async (req, res, next) => {
@@ -43,7 +43,7 @@ exports.getEditProduct = async (req, res) => {
     path: '/admin/products',
     editing: editMode,
     product,
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.postEditProduct = async (req, res, next) => {
@@ -60,7 +60,7 @@ exports.postEditProduct = async (req, res, next) => {
   await product.save()
 
   res.redirect('/admin/products', {
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.getProducts = async (req, res, next) => {
@@ -71,12 +71,21 @@ exports.getProducts = async (req, res, next) => {
     prods: products,
     pageTitle: 'Admin Products',
     path: '/admin/products',
-    isAuthenticated: req.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn
   })
 }
 exports.deleteProduct = async (req, res, next) => {
-  const id = req.params.id
-  await req.user.removeFromCart(id)
-  await Product.findByIdAndDelete(id)
-  res.redirect('/admin/products', { isAuthenticated: req.isLoggedIn })
+  try {
+    const id = req.params.id
+    const exists = req.user.cart.items.findIndex(item => item.productId == id)
+    if (exists < 0) {
+      await Product.findByIdAndDelete(id)
+    } else {
+      await req.user.removeFromCart(id)
+      await Product.findByIdAndDelete(id)
+    }
+    res.redirect('/admin/products')
+  } catch (error) {
+    console.log(error)
+  }
 }
