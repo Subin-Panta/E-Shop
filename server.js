@@ -10,6 +10,7 @@ const config = require('config')
 const User = require('./models/user')
 const mongoURI = config.get('mongoURI')
 const csrf = require('csurf')
+const flash = require('connect-flash')
 const store = new MongoDBStore({
   uri: mongoURI,
   collection: 'sessions'
@@ -33,6 +34,7 @@ app.use(
   })
 )
 app.use(csrfProtection)
+app.use(flash())
 app.use(async (req, res, next) => {
   if (!req.session.user) {
     return next()

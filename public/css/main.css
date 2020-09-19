@@ -224,12 +224,27 @@ form {
   background: red;
   color: white;
 }
-
+.user-message {
+  margin: auto;
+  width: 90%;
+  border: 1px solid #cee7ca;
+  text-align: center;
+  padding: 0.25rem;
+  border-radius: 5px;
+  background-color: #b0dfd9;
+}
+.user-message--error {
+  background-color: #924238;
+  border-color: #cc6b45;
+  color: white; 
+}
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;
   }
-
+  .user-message {
+    width: 30rem;
+  }
   #side-menu-toggle {
     display: none;
   }

@@ -4,8 +4,7 @@ exports.getAddProduct = (req, res) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
-    editing: false,
-    isAuthenticated: req.session.isLoggedIn
+    editing: false
   })
 }
 exports.postAddProduct = async (req, res, next) => {
@@ -42,8 +41,7 @@ exports.getEditProduct = async (req, res) => {
     pageTitle: 'Add Product',
     path: '/admin/products',
     editing: editMode,
-    product,
-    isAuthenticated: req.session.isLoggedIn
+    product
   })
 }
 exports.postEditProduct = async (req, res, next) => {
@@ -59,9 +57,7 @@ exports.postEditProduct = async (req, res, next) => {
   product.price = updatedPrice
   await product.save()
 
-  res.redirect('/admin/products', {
-    isAuthenticated: req.session.isLoggedIn
-  })
+  res.redirect('/admin/products')
 }
 exports.getProducts = async (req, res, next) => {
   const products = await Product.find()
@@ -70,8 +66,7 @@ exports.getProducts = async (req, res, next) => {
   res.render('admin/products', {
     prods: products,
     pageTitle: 'Admin Products',
-    path: '/admin/products',
-    isAuthenticated: req.session.isLoggedIn
+    path: '/admin/products'
   })
 }
 exports.deleteProduct = async (req, res, next) => {

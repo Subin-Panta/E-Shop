@@ -1,12 +1,24 @@
 const User = require('../models/user')
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
+const sendgridTransport = require('nodemailer-sendgrid-transport')
+const config = require('config')
+
+const apiKey = config.get('apiKey')
+const transporter = nodemailer.createTransport(
+  sendgridTransport({
+    auth: {
+      api_key: apiKey
+    }
+  })
+)
 exports.getLogin = (req, res, next) => {
-  const isLoggedIn = false
   //   console.log(req.session.isLoggedIn)
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    isAuthenticated: isLoggedIn
+    errorMessage: null
+    // errorMessage: req.flash('error')
   })
 }
 exports.postLogin = async (req, res, next) => {
@@ -15,7 +27,13 @@ exports.postLogin = async (req, res, next) => {
     const password = req.body.password
     const user = await User.findOne({ email })
     if (!user) {
-      return res.redirect('/login')
+      // req.flash('error', 'Invalid Credentials')
+      // return res.redirect('/login')
+      return res.render('auth/login', {
+        path: '/login',
+        pageTitle: 'Login',
+        errorMessage: 'Invalid Credentials'
+      })
     }
     const result = await bcrypt.compare(password, user.password)
     if (result) {
@@ -26,7 +44,11 @@ exports.postLogin = async (req, res, next) => {
         return res.redirect('/')
       })
     }
-    res.redirect('/login')
+    res.render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: 'Invalid Credentials'
+    })
   } catch (error) {
     console.log(error)
   }
@@ -40,11 +62,10 @@ exports.postLogout = async (req, res, next) => {
   }
 }
 exports.getSignUp = (req, res, next) => {
-  const isLoggedIn = false
   res.render('auth/signUp', {
     path: '/signup',
     pageTitle: 'Sign Up',
-    isAuthenticated: isLoggedIn
+    errorMessage: null
   })
 }
 exports.postSignUp = async (req, res, next) => {
@@ -54,7 +75,11 @@ exports.postSignUp = async (req, res, next) => {
   try {
     let user = await User.findOne({ email })
     if (user) {
-      return res.redirect('/signup')
+      return res.render('auth/signUp', {
+        path: '/signup',
+        pageTitle: 'Sign Up',
+        errorMessage: 'User Already Exists'
+      })
     }
 
     const hashedpassword = await bcrypt.hash(password, 12)
@@ -66,6 +91,12 @@ exports.postSignUp = async (req, res, next) => {
       }
     })
     await user.save()
+    await transporter.sendMail({
+      to: user.email,
+      from: 'sbinpta@gmail.com ',
+      subject: 'SignUp',
+      html: '<h1>welcome to the club Bitch BITCHEZ</h1>'
+    })
     res.redirect('/login')
   } catch (error) {
     console.log(error)
