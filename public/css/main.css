@@ -21,8 +21,15 @@ form {
 
 .centered {
   text-align: center;
+  padding: 0.25rem;
 }
-
+.centered a {
+  text-decoration: none;
+  color: rgb(196, 194, 71);
+}
+.centered a:hover {
+  color: rgb(51, 142, 184);
+}
 .image {
   height: 20rem;
 }
@@ -236,7 +243,7 @@ form {
 .user-message--error {
   background-color: #924238;
   border-color: #cc6b45;
-  color: white; 
+  color: white;
 }
 @media (min-width: 768px) {
   .main-header__nav {

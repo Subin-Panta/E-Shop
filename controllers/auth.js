@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs')
 const nodemailer = require('nodemailer')
 const sendgridTransport = require('nodemailer-sendgrid-transport')
 const config = require('config')
-
+const crypto = require('crypto')
+const user = require('../models/user')
 const apiKey = config.get('apiKey')
 const transporter = nodemailer.createTransport(
   sendgridTransport({
@@ -91,13 +92,115 @@ exports.postSignUp = async (req, res, next) => {
       }
     })
     await user.save()
-    await transporter.sendMail({
+    res.redirect('/login')
+    transporter.sendMail({
       to: user.email,
       from: 'sbinpta@gmail.com ',
       subject: 'SignUp',
       html: '<h1>welcome to the club Bitch BITCHEZ</h1>'
     })
-    res.redirect('/login')
+  } catch (error) {
+    console.log(error)
+  }
+}
+exports.getReset = (req, res, next) => {
+  res.render('auth/reset', {
+    path: '/reset',
+    pageTitle: 'Reset passWord',
+    errorMessage: null
+  })
+}
+exports.postReset = (req, res, next) => {
+  crypto.randomBytes(32, async (err, buffer) => {
+    if (err) {
+      console.log(err)
+      return res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Reset passWord',
+        errorMessage: 'Please Try Again'
+      })
+    }
+    const token = buffer.toString('hex')
+    try {
+      const user = await User.findOne({ email: req.body.email })
+      if (!user) {
+        return res.render('auth/reset', {
+          path: '/reset',
+          pageTitle: 'Reset passWord',
+          errorMessage: 'No account associated with the email address'
+        })
+      }
+      user.resetToken = token
+      user.resetTokenExpiration = Date.now() + 3600000
+      await user.save()
+      res.redirect('/')
+      transporter.sendMail({
+        to: user.email,
+        from: 'sbinpta@gmail.com ',
+        subject: 'Reset Password',
+        html: `
+        <p>Dont Forget Your Password DumbShit </p>
+        <p>Click This <a href='http://localhost:8000/reset/${token}'>Link</a> to Reset</p>
+        <p>expires in 1 Hour  </p>
+        `
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  })
+}
+exports.getNewPassword = async (req, res, next) => {
+  const token = req.params.token
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() }
+    })
+    if (!user) {
+      return res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Reset passWord',
+        errorMessage: 'Token no longer valid'
+      })
+    }
+    res.render('auth/newPassword', {
+      path: '/newPassword',
+      pageTitle: 'Reset password',
+      errorMessage: null,
+      userId: user._id.toString(),
+      token
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+exports.postNewPassword = async (req, res, next) => {
+  const newPassword = req.body.password
+  const userId = req.body.userId
+  const token = req.body.token
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+      _id: userId
+    })
+    if (!user) {
+      return res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Reset passWord',
+        errorMessage: 'Token no longer valid'
+      })
+    }
+    const updatedpassword = await bcrypt.hash(newPassword, 12)
+    user.password = updatedpassword
+    user.resetToken = undefined
+    user.resetTokenExpiration = undefined
+    await user.save()
+    res.render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: 'Password Changed'
+    })
   } catch (error) {
     console.log(error)
   }
