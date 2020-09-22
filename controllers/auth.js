@@ -5,6 +5,7 @@ const sendgridTransport = require('nodemailer-sendgrid-transport')
 const config = require('config')
 const crypto = require('crypto')
 const user = require('../models/user')
+const { validationResult } = require('express-validator')
 const apiKey = config.get('apiKey')
 const transporter = nodemailer.createTransport(
   sendgridTransport({
@@ -18,7 +19,10 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    errorMessage: null
+    errorMessage: null,
+    oldInput: {
+      email: ''
+    }
     // errorMessage: req.flash('error')
   })
 }
@@ -26,16 +30,18 @@ exports.postLogin = async (req, res, next) => {
   try {
     const email = req.body.email
     const password = req.body.password
-    const user = await User.findOne({ email })
-    if (!user) {
-      // req.flash('error', 'Invalid Credentials')
-      // return res.redirect('/login')
-      return res.render('auth/login', {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(422).render('auth/login', {
         path: '/login',
         pageTitle: 'Login',
-        errorMessage: 'Invalid Credentials'
+        errorMessage: errors.array(),
+        oldInput: {
+          email
+        }
       })
     }
+    const user = await User.findOne({ email })
     const result = await bcrypt.compare(password, user.password)
     if (result) {
       req.session.isLoggedIn = true
@@ -48,7 +54,10 @@ exports.postLogin = async (req, res, next) => {
     res.render('auth/login', {
       path: '/login',
       pageTitle: 'Login',
-      errorMessage: 'Invalid Credentials'
+      errorMessage: [{ msg: 'Invalid Credentials' }],
+      oldInput: {
+        email
+      }
     })
   } catch (error) {
     console.log(error)
@@ -66,25 +75,33 @@ exports.getSignUp = (req, res, next) => {
   res.render('auth/signUp', {
     path: '/signup',
     pageTitle: 'Sign Up',
-    errorMessage: null
+    errorMessage: null,
+    oldInput: {
+      email: '',
+      password: ''
+    }
   })
 }
 exports.postSignUp = async (req, res, next) => {
   const email = req.body.email
   const password = req.body.password
-  const confirmPassword = req.body.confirmPassword
-  try {
-    let user = await User.findOne({ email })
-    if (user) {
-      return res.render('auth/signUp', {
-        path: '/signup',
-        pageTitle: 'Sign Up',
-        errorMessage: 'User Already Exists'
-      })
-    }
 
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    console.log(errors.array())
+    return res.status(422).render('auth/signUp', {
+      path: '/signup',
+      pageTitle: 'Sign Up',
+      errorMessage: errors.array(),
+      oldInput: {
+        email,
+        password
+      }
+    })
+  }
+  try {
     const hashedpassword = await bcrypt.hash(password, 12)
-    user = new User({
+    const user = new User({
       email,
       password: hashedpassword,
       cart: {

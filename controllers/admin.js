@@ -34,7 +34,7 @@ exports.getEditProduct = async (req, res) => {
   }
   const id = req.params.id
   const product = await Product.findById(id)
-  if (!product) {
+  if (!product || product.userId.toString() !== req.user._id.toString()) {
     return res.redirect('/')
   }
   res.render('admin/edit-product', {
@@ -51,6 +51,9 @@ exports.postEditProduct = async (req, res, next) => {
   const updatedImageUrl = req.body.imageUrl
   const updatedDesc = req.body.description
   const product = await Product.findById(id)
+  if (product.userId.toString() !== req.user._id.toString()) {
+    return res.redirect('/')
+  }
   product.title = updatedTitle
   product.imageUrl = updatedImageUrl
   product.description = updatedDesc
@@ -60,7 +63,8 @@ exports.postEditProduct = async (req, res, next) => {
   res.redirect('/admin/products')
 }
 exports.getProducts = async (req, res, next) => {
-  const products = await Product.find()
+  const products = await Product.find({ userId: req.user._id })
+  // const products = await Product.find()
   // const products = await Product.find().populate('userId')
   // console.log(products)
   res.render('admin/products', {
@@ -72,6 +76,10 @@ exports.getProducts = async (req, res, next) => {
 exports.deleteProduct = async (req, res, next) => {
   try {
     const id = req.params.id
+    const product = await Product.findById(id)
+    if (product.userId.toString() !== req.user._id.toString()) {
+      return res.redirect('/')
+    }
     const exists = req.user.cart.items.findIndex(item => item.productId == id)
     if (exists < 0) {
       await Product.findByIdAndDelete(id)
