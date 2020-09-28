@@ -4,3 +4,9 @@ exports.error = (req, res) => {
     path: null
   })
 }
+exports.fiveHundred = (req, res) => {
+  res.status(500).render('500', {
+    pageTitle: 'Error Ocuured',
+    path: null
+  })
+}

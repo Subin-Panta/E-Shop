@@ -19,4 +19,5 @@ router.post(
   isAuth,
   shopController.postCartDeleteProduct
 )
+router.get('/orders/:orderId', isAuth, shopController.getInvoice)
 module.exports = router

@@ -7,22 +7,30 @@
    <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <form class="product-form" action="/admin/<% if (editing) {%>edit-product<% }else {%>add-product<%}%>" method="POST">
+        <% if (errorMessage) {%>
+            <div class="user-message user-message--error"><%= errorMessage.map(item=> item.msg) %></div>
+        <%}%>
+        <form class="product-form" action="/admin/<% if (editing) {%>edit-product<% }else {%>add-product<%}%>" method="POST" enctype="multipart/form-data">
             <div class="form-control">
                 <label for="title">Title</label>
-                <input type="text" name="title" id="title"  value="<% if (editing) { %><%= product.title %><% } %>">
+                 <input  class="<%= errorMessage && errorMessage.find(e=> e.param==='title')? 'invalid': null%>" type="text" name="title" id="title"  value="<% if (editing || errorMessage) { %><%= product.title %><% } %>">
             </div>
-            <div class="form-control">
+            <!-- <div class="form-control">
                 <label for="imageUrl">Image URL</label>
-                <input type="text" name="imageUrl" id="imageUrl" value="<% if (editing) { %><%= product.imageUrl %><% } %>">
+                 <input  class="<%= errorMessage && errorMessage.find(e=> e.param==='imageUrl')? 'invalid': null%>" type="text" name="imageUrl" id="imageUrl" value="<% if (editing || errorMessage) { %><%= product.imageUrl %><% } %>">
+            </div> -->
+            <div class="form-control">
+                <label for="image">Image</label>
+                 <input  class="<%= errorMessage && errorMessage.find(e=> e.param==='image')? 'invalid': null%>" type="file" name="image" id="image">
             </div>
+            
             <div class="form-control">
                 <label for="price">Price</label>
-                <input type="number" name="price" id="price" step="0.01" value="<% if (editing) { %><%= product.price %><% } %>">
+                 <input  class="<%= errorMessage && errorMessage.find(e=> e.param==='price')? 'invalid': null%>" type="number" name="price" id="price" step="0.01" value="<% if (editing || errorMessage) { %><%= product.price %><% } %>">
             </div>
             <div class="form-control">
                 <label for="description">Description</label>
-                <textarea name="description" id="description" rows="5"><% if (editing) { %> <%=product.description %><% }%></textarea>
+                 <textarea  class="<%= errorMessage && errorMessage.find(e=> e.param==='description')? 'invalid': null%>" name="description" id="description" rows="5"><% if (editing || errorMessage) { %><%=product.description%><%}%></textarea>
             </div>
             <% if (editing) {%> 
                 <input type="hidden" value="<%=product.id %>" name="id">  

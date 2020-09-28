@@ -14,7 +14,7 @@
         <form class="login-form" action="/login" method="POST" novalidate>
             <div class="form-control">
                 <label for="email">E-mail</label>
-                <input class="<%= errorMessage && errorMessage.find(e=> e.param==='email')? 'invalid': null%>" type="email" name="email" id="email"  value='<%=oldInput.email%>'>
+                <input class="<%= errorMessage? 'invalid': null%>" type="email" name="email" id="email"  value='<%=oldInput.email%>'>
             </div>
             <div class="form-control">
                 <label for="password">Password</label>

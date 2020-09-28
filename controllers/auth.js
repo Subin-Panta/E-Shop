@@ -59,16 +59,20 @@ exports.postLogin = async (req, res, next) => {
         email
       }
     })
-  } catch (error) {
-    console.log(error)
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 }
 exports.postLogout = async (req, res, next) => {
   try {
     await req.session.destroy()
     res.redirect('/')
-  } catch (error) {
-    console.log(error)
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 }
 exports.getSignUp = (req, res, next) => {
@@ -116,8 +120,10 @@ exports.postSignUp = async (req, res, next) => {
       subject: 'SignUp',
       html: '<h1>welcome to the club Bitch BITCHEZ</h1>'
     })
-  } catch (error) {
-    console.log(error)
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 }
 exports.getReset = (req, res, next) => {
@@ -161,8 +167,10 @@ exports.postReset = (req, res, next) => {
         <p>expires in 1 Hour  </p>
         `
       })
-    } catch (error) {
-      console.log(error)
+    } catch (err) {
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(error)
     }
   })
 }
@@ -187,8 +195,10 @@ exports.getNewPassword = async (req, res, next) => {
       userId: user._id.toString(),
       token
     })
-  } catch (error) {
-    console.log(error)
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 }
 exports.postNewPassword = async (req, res, next) => {
@@ -218,7 +228,9 @@ exports.postNewPassword = async (req, res, next) => {
       pageTitle: 'Login',
       errorMessage: 'Password Changed'
     })
-  } catch (error) {
-    console.log(error)
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 }

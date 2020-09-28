@@ -11,6 +11,7 @@ router.post(
     body('email')
       .isEmail()
       .withMessage('Please Enter A Valid Email')
+      .normalizeEmail()
       .custom(async (value, { req }) => {
         const user = await User.findOne({ email: value })
         if (!user) {
@@ -30,6 +31,7 @@ router.post(
     check('email')
       .isEmail()
       .withMessage('Please Enter a Valid Email')
+      .normalizeEmail()
       .custom(async (value, { req }) => {
         let user = await User.findOne({ email: value })
         if (user) {
@@ -37,15 +39,19 @@ router.post(
         }
         return true
       }),
+
     body('password', 'Passwords must be 6 Characters Long and alphanumeric ')
       .isLength({ min: 6 })
-      .isAlphanumeric(),
-    body('confirmPassword').custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords Have To Match')
-      }
-      return true
-    })
+      .isAlphanumeric()
+      .trim(),
+    body('confirmPassword')
+      .trim()
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error('Passwords Have To Match')
+        }
+        return true
+      })
   ],
   authController.postSignUp
 )
