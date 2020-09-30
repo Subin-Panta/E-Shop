@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator')
-
+const fileHelper = require('../util/file')
 const Product = require('../models/product')
 
 exports.getAddProduct = (req, res) => {
@@ -120,6 +120,7 @@ exports.postEditProduct = async (req, res, next) => {
       })
     }
     if (updatedimage) {
+      fileHelper.deleteFile(product.imageUrl)
       product.imageUrl = updatedimage.path
     }
     await product.save()
@@ -152,9 +153,13 @@ exports.deleteProduct = async (req, res, next) => {
   try {
     const id = req.params.id
     const product = await Product.findById(id)
+    if (!product) {
+      return next(new Error('No Product'))
+    }
     if (product.userId.toString() !== req.user._id.toString()) {
       return res.redirect('/')
     }
+    fileHelper.deleteFile(product.imageUrl)
     const exists = req.user.cart.items.findIndex(item => item.productId == id)
     if (exists < 0) {
       await Product.findByIdAndDelete(id)

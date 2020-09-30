@@ -2,19 +2,40 @@ const Product = require('../models/product')
 const Order = require('../models/order')
 const fs = require('fs')
 const path = require('path')
-exports.getProducts = async (req, res, next) => {
+const PDFDocument = require('pdfkit')
+const { render } = require('pug')
+const ITEMS_PER_PAGE = 3
+const pagination = async (page, renderPath, title, viewPath, next, res) => {
   try {
+    const numProducts = await Product.find().countDocuments()
     const products = await Product.find()
-    res.render('shop/product-list', {
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE)
+
+    return res.render(renderPath, {
       prods: products,
-      pageTitle: 'Products',
-      path: '/products'
+      pageTitle: title,
+      path: viewPath,
+      numProducts,
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < numProducts,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      lastPage: Math.ceil(numProducts / ITEMS_PER_PAGE)
     })
   } catch (err) {
     const error = new Error(err)
     error.httpStatusCode = 500
     return next(error)
   }
+}
+exports.getProducts = (req, res, next) => {
+  const page = +req.query.page || 1
+  const renderPath = 'shop/product-list'
+  const title = 'Products'
+  const viewPath = '/products'
+  pagination(page, renderPath, title, viewPath, next, res)
 }
 exports.getProduct = async (req, res, next) => {
   const id = req.params.id
@@ -31,19 +52,12 @@ exports.getProduct = async (req, res, next) => {
     return next(error)
   }
 }
-exports.getIndex = async (req, res) => {
-  try {
-    const products = await Product.find()
-    res.render('shop/index', {
-      prods: products,
-      pageTitle: 'Shop',
-      path: '/'
-    })
-  } catch (err) {
-    const error = new Error(err)
-    error.httpStatusCode = 500
-    return next(error)
-  }
+exports.getIndex = (req, res, next) => {
+  const page = +req.query.page || 1
+  const renderPath = 'shop/index'
+  const title = 'Shop'
+  const viewPath = '/'
+  pagination(page, renderPath, title, viewPath, next, res)
 }
 exports.getCart = async (req, res) => {
   try {
@@ -140,6 +154,25 @@ exports.getInvoice = async (req, res, next) => {
     }
     const invoiceName = 'Invoice-' + orderId + '.pdf'
     const invoicePath = path.join('data', 'invoices', invoiceName)
+    const pdfDoc = new PDFDocument()
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="' + invoiceName + '"'
+    )
+    pdfDoc.pipe(fs.createWriteStream(invoicePath))
+    pdfDoc.pipe(res)
+    pdfDoc.fontSize(26).text('Invoice')
+    pdfDoc.text('---------------------------------------')
+    pdfDoc.fontSize(10)
+    order.products.map(item =>
+      pdfDoc.text(
+        `${item.product.title}: ${item.quantity} * Rs ${item.product.price}  `
+      )
+    )
+    pdfDoc.text('----------------------------------------')
+    pdfDoc.text(`Total Price: Rs ${order.price}`)
+    pdfDoc.end()
     // fs.readFile(invoicePath, (err, data) => {
     //   if (err) {
     //     return next(err)
@@ -151,13 +184,13 @@ exports.getInvoice = async (req, res, next) => {
     //   )
     //   res.send(data)
     // })
-    const file = fs.createReadStream(invoicePath)
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader(
-      'Content-Disposition',
-      'inline; filename="' + invoiceName + '"'
-    )
-    file.pipe(res)
+    // const file = fs.createReadStream(invoicePath)
+    // res.setHeader('Content-Type', 'application/pdf')
+    // res.setHeader(
+    //   'Content-Disposition',
+    //   'inline; filename="' + invoiceName + '"'
+    // )
+    // file.pipe(res)
   } catch (err) {
     const error = new Error(err)
     error.httpStatusCode = 500
