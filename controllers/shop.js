@@ -3,7 +3,9 @@ const Order = require('../models/order')
 const fs = require('fs')
 const path = require('path')
 const PDFDocument = require('pdfkit')
-const { render } = require('pug')
+const config = require('config')
+const stripeKey = config.get('stripeKey')
+const stripe = require('stripe')(stripeKey)
 const ITEMS_PER_PAGE = 3
 const pagination = async (page, renderPath, title, viewPath, next, res) => {
   try {
@@ -87,11 +89,22 @@ exports.postCart = async (req, res, next) => {
     return next(error)
   }
 }
-exports.getCheckout = (req, res, next) => {
-  res.render('shop/checkout', {
-    pageTitle: 'Checkout',
-    path: '/checkout'
-  })
+exports.getCheckout = async (req, res, next) => {
+  try {
+    const user = await req.user.populate('cart.items.productId').execPopulate()
+    const cartProducts = user.cart.items
+    const price = user.cart.price
+    res.render('shop/checkout', {
+      pageTitle: 'Checkout',
+      path: '/checkout',
+      cartProducts,
+      price
+    })
+  } catch (err) {
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
+  }
 }
 exports.getOrders = async (req, res, next) => {
   try {
@@ -109,6 +122,7 @@ exports.getOrders = async (req, res, next) => {
 }
 exports.postOrder = async (req, res, next) => {
   try {
+    const token = req.body.stripeToken
     const all = await req.user.populate('cart.items.productId').execPopulate()
     const cartProducts = all.cart.items.map(item => {
       return {
@@ -124,6 +138,13 @@ exports.postOrder = async (req, res, next) => {
         email: req.user.email,
         userId: req.user
       }
+    })
+    const charge = stripe.charges.create({
+      amount: cartPrice * 100,
+      currency: 'usd',
+      description: 'Demo Order',
+      source: token,
+      metadata: { order_id: order._id.toString() }
     })
     await order.save()
     req.user.clearCart()

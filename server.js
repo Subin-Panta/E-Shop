@@ -12,6 +12,9 @@ const mongoURI = config.get('mongoURI')
 const csrf = require('csurf')
 const multer = require('multer')
 const { v4: uuidv4 } = require('uuid')
+const shopController = require('./controllers/shop')
+const isAuth = require('./middleware/isAuth')
+
 const store = new MongoDBStore({
   uri: mongoURI,
   collection: 'sessions'
@@ -57,10 +60,10 @@ app.use(
     store
   })
 )
-app.use(csrfProtection)
+
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn
-  res.locals.csrfToken = req.csrfToken()
+
   next()
 })
 app.use(async (req, res, next) => {
@@ -80,7 +83,12 @@ app.use(async (req, res, next) => {
     next(error)
   }
 })
-
+app.post('/create-order', isAuth, shopController.postOrder)
+app.use(csrfProtection)
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken()
+  next()
+})
 app.use('/admin', adminRoutes)
 app.use(shopRoutes)
 app.use(authRoutes)

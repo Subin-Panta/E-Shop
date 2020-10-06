@@ -23,3 +23,14 @@
   margin: 0;
 }
 
+.button {
+  color: white;
+  border: 1px solid brown;
+  padding: 7px;
+  border-radius: 5px;
+}
+.button:hover {
+  background-color: wheat;
+  padding: 10px;
+  transition: all 200ms ease-out;
+}
