@@ -128,7 +128,7 @@ const run = async () => {
 
 		app.listen(port)
 	} catch (error) {
-		console.log(error)
+		console.log('error', error)
 	}
 }
 run().catch(err => console.log(err))
