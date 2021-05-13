@@ -1,0 +1,7 @@
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET / HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /css/main.css HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /css/product.css HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /js/main.js HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /images/2497aeb3-530e-4b24-af39-936fd0147361-2560x1440-EN-EP2_wallpaper.jpg HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /images/8302a292-1714-452e-80ef-9a6c66b76ed2-38211.jpg HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+::ffff:127.0.0.1 - - [13/May/2021:05:09:52 +0000] "GET /images/dc337513-6a7f-4e84-ad5f-82034f016b17-0xs1coc7qahy.png HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
