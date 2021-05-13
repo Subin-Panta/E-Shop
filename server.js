@@ -1,7 +1,8 @@
 const path = require('path')
 const mongoose = require('mongoose')
 const express = require('express')
-
+const https = require('https')
+const fs = require('fs')
 require('dotenv').config()
 const errorController = require('./controllers/error')
 const app = express()
@@ -25,6 +26,8 @@ const store = new MongoDBStore({
 	uri: mongoURI,
 	collection: 'sessions'
 })
+const privateKey = fs.readFileSync('server.key')
+const certificate = fs.readFileSync('server.cert')
 const fileStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, 'images')
@@ -50,7 +53,6 @@ const csrfProtection = csrf()
 const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
-const fs = require('fs')
 
 const accessLogStream = fs.createWriteStream(
 	path.join(__dirname, 'access.log'),
@@ -126,7 +128,7 @@ const run = async () => {
 		})
 		console.log('mongoDb Connected')
 
-		app.listen(port)
+		https.createServer({ key: privateKey, cert: certificate }, app).listen(port)
 	} catch (error) {
 		console.log(error)
 	}
